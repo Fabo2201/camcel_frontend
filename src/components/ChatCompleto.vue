@@ -2,11 +2,11 @@
   <!-- Header -->
   <div class="header">
     <q-toolbar class="bg-grey-3 text-black">
-      <q-btn round flat @click="isMobile && (menu = !menu)">
+      <div round flat @click="isMobile && (menu = !menu)">
         <q-avatar>
-          <img :src="currentConversation.avatar">
+          <img :src="currentConversation.avatar" />
         </q-avatar>
-      </q-btn>
+      </div>
 
       <span class="q-subtitle-1 q-pl-md" @click="isMobile && (menu = !menu)">
         {{ currentConversation.person }}
@@ -23,8 +23,7 @@
   <!-- Sidebar / Drawer -->
   <div class="Drawer">
     <q-toolbar class="bg-grey-3">
-      <q-avatar class="cursor-pointer">
-      </q-avatar>
+      <q-avatar class="cursor-pointer"></q-avatar>
       <q-space />
     </q-toolbar>
 
@@ -39,7 +38,7 @@
         >
           <q-item-section avatar>
             <q-avatar>
-              <img :src="conversation.avatar">
+              <img :src="conversation.avatar" />
             </q-avatar>
           </q-item-section>
           <q-item-section>
@@ -60,7 +59,7 @@
         >
           <q-item-section avatar>
             <q-avatar>
-              <img :src="conversation.avatar">
+              <img :src="conversation.avatar" />
             </q-avatar>
           </q-item-section>
 
@@ -90,7 +89,12 @@
   <q-page-container class="bg-grey-5 chat-area">
     <q-scroll-area class="messages-area">
       <q-list>
-        <q-item v-for="(msg, index) in currentConversation.messages" :key="index" class="message-item" :class="{ 'sent-message': msg.isSender, 'received-message': !msg.isSender }">
+        <q-item
+          v-for="(msg, index) in currentConversation.messages"
+          :key="index"
+          class="message-item"
+          :class="{ 'sent-message': msg.isSender, 'received-message': !msg.isSender }"
+        >
           <q-item-section>
             <q-item-label>{{ msg.text }}</q-item-label>
           </q-item-section>
@@ -102,15 +106,36 @@
   <!-- Message Input Bar -->
   <div @keydown="sendMessage2">
     <q-toolbar class="BarraTexto bg-grey-3 text-black row">
-      <q-btn round flat icon="insert_emoticon" class="q-mr-sm" />
-      <q-input rounded outlined dense class="WAL__field col-grow q-mr-sm" bg-color="white" v-model="message" placeholder="Type a message" />
+      <q-btn
+        round
+        flat
+        icon="insert_emoticon"
+        class="q-mr-sm"
+        @click="toggleEmojiPicker"
+      />
+      <!-- Contenedor del selector de emojis -->
+      <emoji-picker
+        v-if="showEmojiPicker"
+        @emoji-click="addEmoji"
+        class="emoji-picker"
+      ></emoji-picker>
+      <q-input
+        rounded
+        outlined
+        dense
+        class="WAL__field col-grow q-mr-sm"
+        bg-color="white"
+        v-model="message"
+        placeholder="Type a message"
+      />
       <q-btn round flat icon="send" @click="sendMessage" />
     </q-toolbar>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed } from 'vue';
+import 'emoji-picker-element'; // Importa el selector de emojis
 
 const conversations = ref([
   {
@@ -120,7 +145,7 @@ const conversations = ref([
     caption: "I'm working on Quasar!",
     time: '15:00',
     sent: true,
-    messages: []
+    messages: [],
   },
   {
     id: 2,
@@ -129,7 +154,7 @@ const conversations = ref([
     caption: "I'm working on Quasar!",
     time: '16:00',
     sent: true,
-    messages: []
+    messages: [],
   },
   {
     id: 3,
@@ -138,7 +163,7 @@ const conversations = ref([
     caption: "I'm working on Quasar!",
     time: '18:00',
     sent: true,
-    messages: []
+    messages: [],
   },
   {
     id: 4,
@@ -147,42 +172,61 @@ const conversations = ref([
     caption: "I'm working on Quasar!",
     time: '17:00',
     sent: true,
-    messages: []
-  }
-])
+    messages: [],
+  },
+]);
 
-const currentConversationIndex = ref(0)
+const currentConversationIndex = ref(0);
 const currentConversation = computed(() => {
-  return conversations.value[currentConversationIndex.value]
-})
+  return conversations.value[currentConversationIndex.value];
+});
 
-const message = ref('')
-const menu = ref(false)
-const isMobile = ref(window.innerWidth < 768) // Detecta si es móvil
+const message = ref('');
+const menu = ref(false);
+const isMobile = ref(window.innerWidth < 768); // Detecta si es móvil
+const showEmojiPicker = ref(false); // Controla la visibilidad del selector de emojis
 
 function sendMessage() {
   if (message.value.trim() !== '') {
     currentConversation.value.messages.push({
       text: message.value,
-      isSender: true
-    })
-    message.value = ''
+      isSender: true,
+    });
+    message.value = '';
   }
 }
 
 function sendMessage2(event) {
   if (event.key === 'Enter') {
-    sendMessage()
+    sendMessage();
+  }
+}
+function handleClickOutside(event) {
+  if (
+    emojiPickerRef.value &&
+    !emojiPickerRef.value.contains(event.target)
+  ) {
+    showEmojiPicker.value = false;
   }
 }
 
 function setCurrentConversation(index) {
-  currentConversationIndex.value = index
+  currentConversationIndex.value = index;
+}
+
+// Alterna el selector de emojis
+function toggleEmojiPicker() {
+  showEmojiPicker.value = !showEmojiPicker.value;
+}
+
+// Agrega el emoji al campo de texto
+function addEmoji(event) {
+  message.value += event.detail.unicode;
 }
 
 // Listener para cambios de tamaño de la ventana
 window.addEventListener('resize', () => {
-  isMobile.value = window.innerWidth < 768
+  isMobile.value = window.innerWidth < 768;
 });
 </script>
 
@@ -229,8 +273,10 @@ window.addEventListener('resize', () => {
   height: 100%;
   padding: 10px;
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
 }
 
 .message-item {
@@ -239,17 +285,34 @@ window.addEventListener('resize', () => {
   padding: 10px;
   border-radius: 10px;
   word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
   white-space: pre-wrap;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .sent-message {
-  background-color: #DCF8C6;
+  background-color: #dcf8c6;
   margin-left: auto;
 }
 
 .received-message {
-  background-color: #FFF;
+  background-color: #fff;
   margin-right: auto;
+}
+
+.emoji-picker {
+  position: absolute;
+  bottom: 60px;
+  left: 0;
+  z-index: 1000;
+  background-color: white;
+  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  width: 300px;
+  height: 400px;
+  overflow-y: auto;
 }
 
 @media (max-width: 768px) {
@@ -259,7 +322,9 @@ window.addEventListener('resize', () => {
     position: relative;
   }
 
-  .header, .BarraTexto, .chat-area {
+  .header,
+  .BarraTexto,
+  .chat-area {
     width: 100%;
   }
 
